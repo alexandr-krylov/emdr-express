@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Приём платежей</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Приём платежей</h1>
+  </header>
+  <main>
+    <section class="payment-form">
+      <h2>Выберите способ оплаты</h2>
+      <div class="payment-options">
+        <button class="payment-button">Картка</button>
+        <button class="payment-button">QR-код</button>
+        <button class="payment-button">Мобильный банк</button>
+      </div>
+      <form class="payment-form">
+        <label for="card-number">Номер карты:</label>
+        <input type="text" id="card-number" name="card-number" placeholder="0000 0000 0000 0000">
+        <label for="expiration-date">Срок действия:</label>
+        <input type="text" id="expiration-date" name="expiration-date" placeholder="00/00">
+        <label for="cvv">CVV:</label>
+        <input type="text" id="cvv" name="cvv" placeholder="000">
+        <button type="submit">Оплатить</button>
+      </form>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2025 Приём платежей</p>
+  </footer>
+</body>
+</html>
