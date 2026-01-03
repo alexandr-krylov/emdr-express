@@ -34,7 +34,7 @@ header {
 }
 
 .header-container img {
-  height: 44px;
+  height: 66px;
 }
 
 .header-title {
@@ -132,4 +132,46 @@ form button {
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.agreement {
+  margin-top: 20px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+}
+
+.agreement-label {
+  display: flex;
+  gap: 5px;
+  align-items: flex-start;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+/* нативный чекбокс — как есть */
+.agreement-label input[type="checkbox"] {
+  margin-top: 4px;
+  cursor: pointer;
+}
+
+/* ссылки */
+.agreement a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.agreement a:hover {
+  text-decoration: underline;
+}
+
+
+/* кнопка недоступна без согласия */
+form button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
 }

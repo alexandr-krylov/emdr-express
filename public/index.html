@@ -10,7 +10,7 @@
 
 <header>
   <div class="header-container">
-    <img src="img/logo.jpg" alt="EMDR Kazakhstan">
+    <img src="img/logo.jpg" alt="EMDR Express Kazakhstan">
     <div class="header-title">Оплата за интенсив</div>
   </div>
 </header>
@@ -41,8 +41,18 @@
 
       <label>CVV</label>
       <input type="text" placeholder="***">
-
-      <button type="submit">Оплатить 42 000 ₸</button>
+      <div class="agreement">
+        <label class="agreement-label">
+          <input type="checkbox" id="agree" required>
+          <span>
+            Я принимаю условия
+            <a href="/docs/oferta.pdf" target="_blank">публичной оферты</a>
+            и
+            <a href="/docs/privacy.pdf" target="_blank">политики конфиденциальности</a>
+          </span>
+        </label>
+      </div>
+      <button type="submit" disabled>Оплатить 42 000 ₸</button>
     </form>
 
   </div>
@@ -51,6 +61,13 @@
 <footer>
   © 2025 EMDR Kazakhstan
 </footer>
+<script>
+  const agree = document.getElementById('agree');
+  const button = document.querySelector('form button');
 
+  agree.addEventListener('change', () => {
+    button.disabled = !agree.checked;
+  });
+</script>
 </body>
 </html>
