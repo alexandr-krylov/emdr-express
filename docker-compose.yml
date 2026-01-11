@@ -12,16 +12,16 @@ services:
   #   networks:
   #     - web_network
 
-  # php:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile-php
-  #   volumes:
-  #     - .:/var/www/html
-  #   expose:
-  #     - 9000
-  #   networks:
-  #     - web_network
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile-php
+    volumes:
+      - .:/var/www/html
+    expose:
+      - 9000
+    networks:
+      - web_network
 
   nginx:
     image: nginx:alpine

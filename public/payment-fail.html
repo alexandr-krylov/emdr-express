@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ошибка оплаты - EMDR Express</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .result-page { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px 20px; }
+        .result-icon { font-size: 5rem; margin-bottom: 20px; }
+        .result-title { color: #dc3545; margin-bottom: 15px; }
+        .result-text { max-width: 500px; margin-bottom: 30px; color: #666; }
+        .result-btn { display: inline-block; padding: 15px 30px; background: #00778a; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; transition: background 0.2s; margin: 5px; }
+        .result-btn:hover { background: #005a66; }
+        .result-btn.secondary { background: #6c757d; }
+        .result-btn.secondary:hover { background: #545b62; }
+    </style>
+</head>
+<body>
+    <div class="result-page">
+        <div class="result-icon">❌</div>
+        <h1 class="result-title">Оплата не прошла</h1>
+        <p class="result-text">
+            К сожалению, платеж не был завершен. Это могло произойти по разным причинам:
+            недостаточно средств, отмена операции или технический сбой.
+        </p>
+        <p class="result-text">
+            Вы можете попробовать оплатить снова или связаться с нами для помощи.
+        </p>
+        <div>
+            <a href="index.html#payment" class="result-btn">Попробовать снова</a>
+            <a href="index.html" class="result-btn secondary">На главную</a>
+        </div>
+    </div>
+</body>
+</html>

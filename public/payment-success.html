@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оплата успешна - EMDR Express</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .result-page { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px 20px; }
+        .result-icon { font-size: 5rem; margin-bottom: 20px; }
+        .result-title { color: #00778a; margin-bottom: 15px; }
+        .result-text { max-width: 500px; margin-bottom: 30px; color: #666; }
+        .result-btn { display: inline-block; padding: 15px 30px; background: #00778a; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; transition: background 0.2s; }
+        .result-btn:hover { background: #005a66; }
+        .order-info { background: #f5f5f5; padding: 20px; border-radius: 10px; margin-bottom: 30px; }
+        .order-info p { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div class="result-page">
+        <div class="result-icon">✅</div>
+        <h1 class="result-title">Оплата прошла успешно!</h1>
+        <div class="order-info" id="orderInfo">
+            <p><strong>Номер заказа:</strong> <span id="invId">—</span></p>
+            <p><strong>Сумма:</strong> <span id="amount">—</span></p>
+        </div>
+        <p class="result-text">
+            Спасибо за оплату! Мы отправим вам подтверждение и инструкции на указанный email.
+            Если у вас есть вопросы, свяжитесь с нами.
+        </p>
+        <a href="index.html" class="result-btn">Вернуться на главную</a>
+    </div>
+
+    <script>
+        // Получаем параметры из URL
+        const params = new URLSearchParams(window.location.search);
+        const invId = params.get('InvId') || params.get('inv_id');
+        const outSum = params.get('OutSum') || params.get('amount');
+
+        if (invId) {
+            document.getElementById('invId').textContent = invId;
+        }
+        if (outSum) {
+            document.getElementById('amount').textContent = parseFloat(outSum).toLocaleString('ru-RU') + ' ₸';
+        }
+    </script>
+</body>
+</html>
