@@ -1,11 +1,13 @@
 <?php
+require_once __DIR__ . '/PaymentGatewayInterface.php';
+
 /**
  * Класс для работы с платежной системой Robokassa
- * 
+ *
  * Документация: https://docs.robokassa.ru/
  */
 
-class Robokassa
+class Robokassa implements PaymentGatewayInterface
 {
     private string $merchantLogin;
     private string $password1;
@@ -110,7 +112,7 @@ class Robokassa
     
     /**
      * Проверка подписи для SuccessURL
-     * 
+     *
      * Формула: OutSum:InvId:Password1
      */
     public function validateSuccessSignature(float $amount, int $invId, string $signature): bool
@@ -120,10 +122,29 @@ class Robokassa
             $invId,
             $this->password1
         ]);
-        
+
         $expectedSignature = strtoupper(hash($this->hashAlgo, $data));
-        
+
         return hash_equals($expectedSignature, strtoupper($signature));
+    }
+
+    /**
+     * Validate webhook signature (implements PaymentGatewayInterface)
+     *
+     * @param array $requestData Webhook request data
+     * @return bool True if signature is valid
+     */
+    public function validateWebhook(array $requestData): bool
+    {
+        if (!isset($requestData['OutSum'], $requestData['InvId'], $requestData['SignatureValue'])) {
+            return false;
+        }
+
+        return $this->validateResultSignature(
+            (float) $requestData['OutSum'],
+            (int) $requestData['InvId'],
+            $requestData['SignatureValue']
+        );
     }
     
     /**

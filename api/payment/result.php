@@ -13,12 +13,12 @@
  */
 
 require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../Robokassa.php';
+require_once __DIR__ . '/../PaymentGatewayFactory.php';
 
 $config = require __DIR__ . '/../config.php';
 
 // Логирование для отладки
-$logFile = __DIR__ . '/../../logs/robokassa_result.log';
+$logFile = __DIR__ . '/../../logs/payment_result.log';
 $logDir = dirname($logFile);
 if (!is_dir($logDir)) {
     mkdir($logDir, 0755, true);
@@ -32,27 +32,39 @@ $logData = [
 ];
 file_put_contents($logFile, json_encode($logData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n\n", FILE_APPEND);
 
-// Получаем параметры (могут прийти как GET, так и POST)
-$outSum = $_REQUEST['OutSum'] ?? null;
-$invId = $_REQUEST['InvId'] ?? null;
-$signatureValue = $_REQUEST['SignatureValue'] ?? null;
+// Определяем систему платежа
+$system = PaymentGatewayFactory::detectSystemFromRequest();
 
-// Проверяем наличие обязательных параметров
-if (!$outSum || !$invId || !$signatureValue) {
+// Извлекаем ID заказа в зависимости от системы
+if ($system === 'robokassa') {
+    $invId = $_REQUEST['InvId'] ?? null;
+    $amount = $_REQUEST['OutSum'] ?? null;
+} elseif ($system === 'primepay') {
+    $invId = $_REQUEST['id'] ?? null;
+    $amount = null; // Для PrimePay сумма может быть в других полях
+} else {
     http_response_code(400);
-    echo 'ERROR: Missing required parameters';
+    echo 'ERROR: Unknown payment system';
     exit;
 }
 
-$robokassa = new Robokassa($config);
+// Проверяем наличие ID заказа
+if (!$invId) {
+    http_response_code(400);
+    echo 'ERROR: Missing order ID';
+    exit;
+}
 
-// Проверяем подпись
-if (!$robokassa->validateResultSignature((float) $outSum, (int) $invId, $signatureValue)) {
+// Создаем экземпляр платежного шлюза через фабрику
+$gateway = PaymentGatewayFactory::createFromRequest($config);
+
+// Проверяем подпись через унифицированный метод
+if (!$gateway->validateWebhook($_REQUEST)) {
     http_response_code(400);
     echo 'ERROR: Invalid signature';
-    
+
     // Логируем ошибку
-    file_put_contents($logFile, "ERROR: Invalid signature for InvId=$invId\n\n", FILE_APPEND);
+    file_put_contents($logFile, "ERROR: Invalid signature for InvId=$invId, System=$system\n\n", FILE_APPEND);
     exit;
 }
 
@@ -67,11 +79,15 @@ try {
     // sendPaymentNotification($invId, $outSum);
     
     // Логируем успешную оплату
-    file_put_contents($logFile, "SUCCESS: Payment confirmed for InvId=$invId, Sum=$outSum\n\n", FILE_APPEND);
-    
-    // Возвращаем подтверждение для Robokassa
-    // ВАЖНО: формат ответа должен быть именно таким!
-    echo "OK$invId";
+    file_put_contents($logFile, "SUCCESS: Payment confirmed for InvId=$invId, System=$system\n\n", FILE_APPEND);
+
+    // Возвращаем подтверждение в зависимости от системы
+    if ($system === 'robokassa') {
+        echo "OK$invId";
+    } elseif ($system === 'primepay') {
+        // Для PrimePay может потребоваться другой формат ответа
+        echo json_encode(['status' => 'ok', 'order_id' => $invId]);
+    }
     
 } catch (Exception $e) {
     http_response_code(500);

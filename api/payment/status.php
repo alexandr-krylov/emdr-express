@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../Robokassa.php';
+require_once __DIR__ . '/../PaymentGatewayFactory.php';
 
 $config = require __DIR__ . '/../config.php';
 
@@ -40,9 +40,9 @@ if ($invId <= 0) {
     exit;
 }
 
-$robokassa = new Robokassa($config);
+$gateway = PaymentGatewayFactory::create($config);
 
 // Получаем статус платежа
-$status = $robokassa->getPaymentStatus($invId);
+$status = $gateway->getPaymentStatus($invId);
 
 echo json_encode($status, JSON_UNESCAPED_UNICODE);

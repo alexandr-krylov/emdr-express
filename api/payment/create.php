@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../Robokassa.php';
+require_once __DIR__ . '/../PaymentGatewayFactory.php';
 
 $config = require __DIR__ . '/../config.php';
 
@@ -51,14 +51,14 @@ if ($amount <= 0) {
 // В реальном проекте это должен быть ID из базы данных
 $invId = time() . rand(100, 999);
 
-// Создаем экземпляр Robokassa
-$robokassa = new Robokassa($config);
+// Создаем экземпляр платежного шлюза через фабрику
+$gateway = PaymentGatewayFactory::create($config);
 
 // Формируем данные для чека (54-ФЗ)
-$receipt = $robokassa->createReceipt($description, $amount);
+$receipt = $gateway->createReceipt($description, $amount);
 
 // Получаем URL для оплаты
-$paymentUrl = $robokassa->getPaymentUrl(
+$paymentUrl = $gateway->getPaymentUrl(
     $amount,
     $invId,
     $description,
