@@ -24,6 +24,7 @@ return [
     'result_url' => 'https://yourdomain.com/api/payment/result.php',
     'success_url' => 'https://yourdomain.com/payment-success.html',
     'fail_url' => 'https://yourdomain.com/payment-fail.html',
+    'log_file' => '/../../logs/payment_result.log',
 
     // Настройки Robokassa
     'robokassa' => [

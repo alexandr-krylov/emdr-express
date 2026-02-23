@@ -16,6 +16,7 @@ class Robokassa implements PaymentGatewayInterface
     private string $paymentUrl;
     private string $statusUrl;
     private string $hashAlgo;
+    private string $culture;
     
     public function __construct(array $config)
     {
@@ -26,16 +27,40 @@ class Robokassa implements PaymentGatewayInterface
         $this->paymentUrl = $config['payment_url'];
         $this->statusUrl = $config['status_url'];
         $this->hashAlgo = $config['hash_algo'] ?? 'md5';
+        $this->culture = $config['culture'] ?? 'ru';
+    }
+
+    /**
+     * Тест подключения к Robokassa API
+     * 
+     * @return array Результат проверки
+     */
+    public function testConnection(): array
+    {
+        // Проверяем доступность API
+        $testUrl = $this->paymentUrl . '?MerchantLogin=' . $this->merchantLogin . '&IsTest=1';
+        
+        return [
+            'success' => true,
+            'merchant_login' => $this->merchantLogin,
+            'is_test' => $this->isTest,
+            'payment_url' => $this->paymentUrl,
+            'message' => 'Конфигурация корректна. Ошибка 500 означает проблемы на стороне Robokassa.' .
+                         ' Проверьте: 1) Активирован ли магазин в личном кабинете;' .
+                         ' 2) Разрешены ли платежи в тестовом режиме;' .
+                         ' 3) Правильные ли пароли (password1/password2) для Kazakhstan API'
+        ];
     }
     
     /**
-     * Генерация URL для оплаты
-     * 
+     * Генерация URL для оплаты (HTTP протокол)
+     *
      * @param float $amount Сумма платежа
      * @param int $invId Номер заказа
      * @param string $description Описание платежа
      * @param string|null $email Email покупателя
      * @param array $receipt Данные для чека (54-ФЗ)
+     * @param string $shpItem Артикул товара/услуги (обязательно для Robokassa Kazakhstan)
      * @return string URL для редиректа на оплату
      */
     public function getPaymentUrl(
@@ -43,11 +68,12 @@ class Robokassa implements PaymentGatewayInterface
         int $invId,
         string $description,
         ?string $email = null,
-        array $receipt = []
+        array $receipt = [],
+        string $shpItem = '1'
     ): string {
-        // Формируем подпись
-        $signature = $this->generateSignature($amount, $invId);
-        
+        // Формируем подпись (с Shp_item для Kazakhstan API)
+        $signature = $this->generateSignature($amount, $invId, $shpItem);
+
         // Базовые параметры
         $params = [
             'MerchantLogin' => $this->merchantLogin,
@@ -55,43 +81,128 @@ class Robokassa implements PaymentGatewayInterface
             'InvId' => $invId,
             'Description' => $description,
             'SignatureValue' => $signature,
+            'Shp_item' => $shpItem,
         ];
-        
+
         // Добавляем email если указан
         if ($email) {
             $params['Email'] = $email;
         }
-        
+
         // Тестовый режим
         if ($this->isTest) {
             $params['IsTest'] = 1;
         }
-        
+
+        // Язык интерфейса (важно для Kazakhstan)
+        $params['Culture'] = $this->culture;
+
         // Добавляем данные для чека (54-ФЗ) если указаны
+        // http_build_query автоматически URL-кодирует значения
         if (!empty($receipt)) {
-            $params['Receipt'] = urlencode(json_encode($receipt, JSON_UNESCAPED_UNICODE));
+            $params['Receipt'] = json_encode($receipt, JSON_UNESCAPED_UNICODE);
         }
-        
+
         return $this->paymentUrl . '?' . http_build_query($params);
+    }
+
+    /**
+     * Генерация HTML с JavaScript формой оплаты (рекомендуемый способ)
+     *
+     * @param float $amount Сумма платежа
+     * @param int $invId Номер заказа
+     * @param string $description Описание платежа
+     * @param string|null $email Email покупателя
+     * @param array $receipt Данные для чека (54-ФЗ)
+     * @param string $shpItem Артикул товара/услуги
+     * @return string HTML с JavaScript формой
+     */
+    public function getPaymentFormHtml(
+        float $amount,
+        int $invId,
+        string $description,
+        ?string $email = null,
+        array $receipt = [],
+        string $shpItem = '1'
+    ): string {
+        // Формируем подпись для JavaScript формы
+        $signature = $this->generateJsSignature($amount, $invId, $shpItem);
+
+        // Базовые параметры
+        $params = [
+            'MerchantLogin' => $this->merchantLogin,
+            'DefaultSum' => number_format($amount, 2, '.', ''),
+            'InvoiceID' => $invId,
+            'Description' => $description,
+            'SignatureValue' => $signature,
+            'Shp_item' => $shpItem,
+        ];
+
+        // Добавляем email если указан
+        if ($email) {
+            $params['Email'] = $email;
+        }
+
+        // Тестовый режим
+        if ($this->isTest) {
+            $params['IsTest'] = 1;
+        }
+
+        // Язык интерфейса (важно для Kazakhstan)
+        $params['Culture'] = $this->culture;
+
+        // Добавляем данные для чека (54-ФЗ) если указаны
+        // http_build_query автоматически URL-кодирует значения
+        if (!empty($receipt)) {
+            $params['Receipt'] = json_encode($receipt, JSON_UNESCAPED_UNICODE);
+        }
+
+        $queryString = http_build_query($params);
+
+        return "<html><script language=JavaScript src='https://auth.robokassa.kz/Merchant/PaymentForm/FormFLS.js?{$queryString}'></script></html>";
     }
     
     /**
      * Генерация подписи для запроса оплаты
      * 
-     * Формула: MerchantLogin:OutSum:InvId:Password1
+     * Формула для Robokassa Kazakhstan: MerchantLogin:OutSum:InvId:Password1:Shp_item=value
+     * 
+     * @param float $amount Сумма платежа
+     * @param int $invId Номер заказа
+     * @param string $shpItem Артикул товара/услуги
+     * @return string Подпись в верхнем регистре
      */
-    public function generateSignature(float $amount, int $invId): string
+    public function generateSignature(float $amount, int $invId, string $shpItem = '1'): string
     {
         $data = implode(':', [
             $this->merchantLogin,
             number_format($amount, 2, '.', ''),
             $invId,
-            $this->password1
+            $this->password1,
+            "Shp_item=$shpItem"
         ]);
         
         return strtoupper(hash($this->hashAlgo, $data));
     }
-    
+
+    /**
+     * Генерация подписи для JavaScript формы оплаты (FormFLS.js)
+     *
+     * Формула для Kazakhstan: MerchantLogin:OutSum:InvId:Password1:Shp_item=value
+     */
+    private function generateJsSignature(float $amount, int $invId, string $shpItem = '1'): string
+    {
+        $data = implode(':', [
+            $this->merchantLogin,
+            number_format($amount, 2, '.', ''),
+            $invId,
+            $this->password1,
+            "Shp_item=$shpItem"
+        ]);
+
+        return strtoupper(hash($this->hashAlgo, $data));
+    }
+
     /**
      * Проверка подписи от Robokassa (ResultURL)
      * 

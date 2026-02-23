@@ -49,7 +49,8 @@ class PrimePay implements PaymentGatewayInterface
         int $invId,
         string $description,
         ?string $email = null,
-        array $receipt = []
+        array $receipt = [],
+        string $shpItem = '1'
     ): string {
         $data = [
             'project_id' => $this->projectId,
@@ -66,9 +67,10 @@ class PrimePay implements PaymentGatewayInterface
         if ($email) {
             $data['email'] = $email;
         }
-        
+        var_dump($this->createPaymentUrl);die;
         // Делаем API запрос
         $response = $this->makeApiRequest('POST', $this->createPaymentUrl, $data);
+        var_dump($response);die;
         
         if (!$response || !isset($response['url'])) {
             throw new Exception('Не удалось создать платеж: ' . json_encode($response));
@@ -208,7 +210,30 @@ class PrimePay implements PaymentGatewayInterface
             ]
         ];
     }
-    
+
+    /**
+     * Generate payment form HTML (JavaScript widget)
+     *
+     * @param float $amount Payment amount
+     * @param int $invId Order ID
+     * @param string $description Payment description
+     * @param string|null $email Customer email
+     * @param array $receipt Receipt data
+     * @return string HTML with JavaScript form
+     */
+    public function getPaymentFormHtml(
+        float $amount,
+        int $invId,
+        string $description,
+        ?string $email = null,
+        array $receipt = [],
+        string $shpItem = '1'
+    ): string {
+        // PrimePay doesn't support JavaScript widget, so return URL redirect
+        $url = $this->getPaymentUrl($amount, $invId, $description, $email, $receipt);
+        return "<html><script>window.location.href = '{$url}';</script></html>";
+    }
+
     /**
      * Выполнение API запроса
      */
@@ -237,5 +262,29 @@ class PrimePay implements PaymentGatewayInterface
         }
         
         return json_decode($response, true);
+    }
+
+    /**
+     * Test connection to PrimePay API
+     *
+     * @return array Connection test result
+     */
+    public function testConnection(): array
+    {
+        // Проверяем, что API ключи настроены
+        if (empty($this->apiKey) || empty($this->secretKey) || empty($this->projectId)) {
+            return [
+                'success' => false,
+                'error' => 'API ключи не настроены',
+                'hint' => 'Проверьте настройки в config.php: api_key, secret_key, project_id'
+            ];
+        }
+
+        return [
+            'success' => true,
+            'project_id' => $this->projectId,
+            'is_test' => $this->isTest,
+            'message' => 'Конфигурация PrimePay корректна'
+        ];
     }
 }

@@ -18,7 +18,7 @@ require_once __DIR__ . '/../PaymentGatewayFactory.php';
 $config = require __DIR__ . '/../config.php';
 
 // Логирование для отладки
-$logFile = __DIR__ . '/../../logs/payment_result.log';
+$logFile = __DIR__ . $config['log_file'] ?? __DIR__ . '/../../logs/payment_result.log';
 $logDir = dirname($logFile);
 if (!is_dir($logDir)) {
     mkdir($logDir, 0755, true);

@@ -10,6 +10,7 @@ interface PaymentGatewayInterface
      * @param string $description Payment description
      * @param string|null $email Customer email
      * @param array $receipt Receipt data
+     * @param string $shpItem Item code (required for Robokassa Kazakhstan)
      * @return string Payment URL
      */
     public function getPaymentUrl(
@@ -17,7 +18,8 @@ interface PaymentGatewayInterface
         int $invId,
         string $description,
         ?string $email = null,
-        array $receipt = []
+        array $receipt = [],
+        string $shpItem = '1'
     ): string;
 
     /**
@@ -51,4 +53,31 @@ interface PaymentGatewayInterface
         int $quantity = 1,
         string $tax = 'none'
     ): array;
+
+    /**
+     * Generate payment form HTML (JavaScript widget)
+     *
+     * @param float $amount Payment amount
+     * @param int $invId Order ID
+     * @param string $description Payment description
+     * @param string|null $email Customer email
+     * @param array $receipt Receipt data
+     * @param string $shpItem Item code (required for Robokassa Kazakhstan)
+     * @return string HTML with JavaScript form
+     */
+    public function getPaymentFormHtml(
+        float $amount,
+        int $invId,
+        string $description,
+        ?string $email = null,
+        array $receipt = [],
+        string $shpItem = '1'
+    ): string;
+
+    /**
+     * Test connection to payment gateway
+     *
+     * @return array Connection test result
+     */
+    public function testConnection(): array;
 }

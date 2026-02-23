@@ -8,6 +8,7 @@
  * - amount (float) - сумма платежа (опционально, по умолчанию из конфига)
  * - email (string) - email покупателя (опционально)
  * - description (string) - описание платежа (опционально)
+ * - payment_system (string) - платежная система: 'robokassa' или 'primepay' (опционально, по умолчанию из конфига)
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -35,10 +36,18 @@ $config = require __DIR__ . '/../config.php';
 
 // Получаем данные из запроса
 $input = json_decode(file_get_contents('php://input'), true) ?? [];
-
+// var_dump($input);die;
 $amount = (float) ($input['amount'] ?? $config['default_amount']);
 $email = $input['email'] ?? null;
 $description = $input['description'] ?? $config['default_description'];
+$paymentSystem = $input['payment_system'] ?? $config['payment_system'];
+
+// Валидация платежной системы
+if (!in_array($paymentSystem, ['robokassa', 'primepay'])) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Неверная платежная система. Используйте: robokassa или primepay']);
+    exit;
+}
 
 // Валидация суммы
 if ($amount <= 0) {
@@ -52,12 +61,13 @@ if ($amount <= 0) {
 $invId = time() . rand(100, 999);
 
 // Создаем экземпляр платежного шлюза через фабрику
+$config['payment_system'] = $paymentSystem;
 $gateway = PaymentGatewayFactory::create($config);
 
 // Формируем данные для чека (54-ФЗ)
 $receipt = $gateway->createReceipt($description, $amount);
 
-// Получаем URL для оплаты
+// Получаем URL для оплаты (HTTP редирект)
 $paymentUrl = $gateway->getPaymentUrl(
     $amount,
     $invId,
@@ -74,5 +84,6 @@ echo json_encode([
     'success' => true,
     'payment_url' => $paymentUrl,
     'inv_id' => $invId,
-    'amount' => $amount
+    'amount' => $amount,
+    'payment_system' => $paymentSystem
 ]);
