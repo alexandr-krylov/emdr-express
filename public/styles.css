@@ -59,7 +59,7 @@ p { font-size: clamp(1rem, 2vw, 1.25rem); margin-bottom: 1rem; line-height: 1.8;
 .schedule-item { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 10px; }
 .schedule-item .label { display: block; font-size: 0.9rem; text-transform: uppercase; opacity: 0.8; margin-bottom: 10px; }
 .schedule-item .value { display: block; font-size: 1.3rem; font-weight: 600; }
-.dates p { font-size: 1.3rem; margin-bottom: 10px; }
+.dates p { font-size: 1.3rem; margin-bottom: 10px; text-transform: uppercase;}
 
 /* Payment Section */
 .payment { padding: 60px 0; background: #f5f5f5; }
@@ -93,3 +93,53 @@ footer { padding: 30px 0; text-align: center; color: #666; font-size: 0.9rem; }
     .benefits-list li { padding-left: 35px; font-size: 1rem; }
     .payment-card { padding: 20px; }
 }
+/* ===== Стиль таблицы и текстового расписания ===== */
+.schedule .dates {
+    margin-top: 40px;
+    /* display: flex; */
+    justify-content: center;
+}
+
+.schedule .dates table {
+    width: 100%;
+    max-width: 900px;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #ffffff;
+    color: #333;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+}
+
+.schedule .dates tr {
+    transition: all 0.25s ease;
+}
+
+.schedule .dates tr:not(:last-child) td {
+    border-bottom: 1px solid #eee;
+}
+
+.schedule .dates tr:hover {
+    background: #f1fbfc;
+}
+
+.schedule .dates td {
+    padding: 22px 30px;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+}
+
+.schedule .dates td:first-child {
+    font-weight: 700;
+    color: #00778a;
+    width: 45%;
+}
+
+.schedule .dates td:last-child {
+    text-align: right;
+    color: #444;
+}
+
+
+
