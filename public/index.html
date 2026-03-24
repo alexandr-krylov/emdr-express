@@ -186,7 +186,7 @@
                 </form>
 
                 <p class="payment-note">
-                    <small>Оплата производится через защищенную платежную систему Robokassa</small>
+                    <small>Оплата производится через платежную систему <a href="docs/tiptoppay.pdf">TipTop Pay</a></small>
                 </p>
             </div>
         </div>
@@ -197,6 +197,7 @@
             © 2026 EMDR Kazakhstan
         </div>
     </footer>
+    <button id="test-db">test DB</button>
 
     <script>
         // Конфигурация
@@ -261,6 +262,16 @@
                 btnText.style.display = 'inline';
                 btnLoader.style.display = 'none';
                 submitBtn.disabled = !agree.checked;
+            }
+        });
+        // test DB connection
+        document.getElementById('test-db').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/test-db.php');
+                const data = await response.json();
+                alert('DB Connection: ' + (data.success ? 'Success' : 'Failed'));
+            } catch (error) {
+                alert('DB Connection Error: ' + error.message);
             }
         });
     </script>
