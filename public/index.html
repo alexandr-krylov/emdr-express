@@ -7,6 +7,7 @@
     <meta name="description" content="Групповые интенсивы EMDR от Ассоциации EMDR Казахстан">
     <meta name="keywords" content="групповая терапия, EMDR, ДПДГ, EMDR терапия, психологическая помощь, интенсивы EMDR">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://widget.tiptoppay.kz/bundles/widget.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -181,7 +182,6 @@
 
                     <button type="submit" class="submit-btn" id="submitBtn" disabled>
                         <span id="btnText">Оплатить <span class="payment-value">0</span> ₸</span>
-                        <span id="btnLoader" style="display: none;">Загрузка...</span>
                     </button>
                 </form>
 
@@ -197,18 +197,15 @@
             © 2026 EMDR Kazakhstan
         </div>
     </footer>
-    <button id="test-db">test DB</button>
 
     <script>
         // Конфигурация
         const API_URL = '/api/payment/create.php'; // Измените на ваш URL
         const AMOUNT = 49200;
-
         const agree = document.getElementById('agree');
         const submitBtn = document.getElementById('submitBtn');
         const paymentForm = document.getElementById('paymentForm');
         const btnText = document.getElementById('btnText');
-        const btnLoader = document.getElementById('btnLoader');
         const paymentValue = document.querySelectorAll('.payment-value');
         console.log(paymentValue);
         // Установка суммы на кнопке
@@ -229,49 +226,37 @@
 
             const email = document.getElementById('email').value;
 
-            // Показываем загрузку
-            btnText.style.display = 'none';
-            btnLoader.style.display = 'inline';
-            submitBtn.disabled = true;
-
             try {
-                const response = await fetch(API_URL, {
+                const res = await fetch('/api/create-order.php', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
                     body: JSON.stringify({
-                        amount: AMOUNT,
                         email: email,
-                        description: 'Интенсив EMDR Express'
+                        amount: AMOUNT
                     })
                 });
+                const order = await res.json();
 
-                const data = await response.json();
+                const widget = new tiptop.Widget();
 
-                if (data.success && data.payment_url) {
-                    // Редирект на страницу оплаты Robokassa
-                    window.location.href = data.payment_url;
-                } else {
-                    throw new Error(data.error || 'Ошибка создания платежа');
-                }
+                const result = await widget.start({
+                    publicTerminalId: 'pk_74581f49e946383ca02b9efdd2d0e',
+                    amount: AMOUNT,
+                    currency: 'KZT',
+                    description: 'Интенсив EMDR Express',
+                    invoiceId: order.invoiceId,
+                    accountId: email,
+                    email: email,
+                    paymentSchema: 'Single'
+                });
+
+                console.log(result);
+
             } catch (error) {
                 alert('Ошибка: ' + error.message);
                 
                 // Возвращаем кнопку в исходное состояние
                 btnText.style.display = 'inline';
-                btnLoader.style.display = 'none';
                 submitBtn.disabled = !agree.checked;
-            }
-        });
-        // test DB connection
-        document.getElementById('test-db').addEventListener('click', async () => {
-            try {
-                const response = await fetch('/api/test-db.php');
-                const data = await response.json();
-                alert('DB Connection: ' + (data.success ? 'Success' : 'Failed'));
-            } catch (error) {
-                alert('DB Connection Error: ' + error.message);
             }
         });
     </script>
