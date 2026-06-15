@@ -41,9 +41,31 @@ p { font-size: clamp(1rem, 2vw, 1.25rem); margin-bottom: 1rem; line-height: 1.8;
 .target-audience { padding: 60px 0; background: #fafafa; text-align: center; }
 .target-audience .subtitle { font-size: 1.2rem; color: #434343; margin-bottom: 40px; }
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-top: 30px; }
-.card { text-align: center; padding: 30px 20px; background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-.card-icon { font-size: 3rem; display: block; margin-bottom: 15px; }
-.card p { margin: 0; }
+.icon-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 30px;
+    margin-top: 50px;
+    text-align: center;
+    align-items: stretch;
+}
+.icon-card {
+    min-width: 0;
+    text-align: center;
+    padding: 30px 20px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.card-icon-img {
+    width: 48px;
+    height: 48px;
+    display: block;
+    margin: 0 auto 16px;
+    max-width: 48px;
+    object-fit: contain;
+}
+.icon-card p { margin: 0; }
 
 /* How It Works Section */
 .how-it-works { padding: 60px 0; }
@@ -92,6 +114,11 @@ footer { padding: 30px 0; text-align: center; color: #666; font-size: 0.9rem; }
     section { padding: 40px 0; }
     .benefits-list li { padding-left: 35px; font-size: 1rem; }
     .payment-card { padding: 20px; }
+    .icon-cards { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 900px) {
+    .icon-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 /* ===== Стиль таблицы и текстового расписания ===== */
 .schedule .dates {
@@ -140,6 +167,3 @@ footer { padding: 30px 0; text-align: center; color: #666; font-size: 0.9rem; }
     text-align: right;
     color: #444;
 }
-
-
-
