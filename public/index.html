@@ -218,71 +218,167 @@
         </div>
     </section>
 
+    <div class="donation-modal" id="donationModal" aria-hidden="true" hidden>
+        <div class="donation-modal__backdrop" data-donation-close></div>
+        <div class="donation-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="donationTitle">
+            <button class="donation-modal__close" type="button" data-donation-close aria-label="Закрыть">×</button>
+            <h2 id="donationTitle">Пожертвование</h2>
+
+            <form class="payment-form" id="donationForm">
+                <label for="donationAmount">Сумма пожертвования, ₸</label>
+                <input type="number" id="donationAmount" min="1" step="1" inputmode="numeric" placeholder="Введите сумму" required>
+
+                <label for="donationEmail">Email для получения чека</label>
+                <input type="email" id="donationEmail" placeholder="your@email.com" required>
+
+                <div class="agreement">
+                    <label class="agreement-label">
+                        <input type="checkbox" id="donationAgree" required>
+                        <span>Я принимаю условия <a href="docs/oferta.pdf">публичной оферты</a> и <a href="docs/privacy.pdf">политики конфиденциальности</a></span>
+                    </label>
+                </div>
+
+                <button type="submit" class="submit-btn" id="donationSubmitBtn" disabled>
+                    Пожертвовать
+                </button>
+            </form>
+        </div>
+    </div>
+
     <footer>
-        <div class="container">
-            © 2026 EMDR Kazakhstan
+        <div class="container footer-content">
+            <button class="footer-donate-btn" type="button" id="donationOpenBtn">Пожертвовать</button>
+            <span>© 2026 EMDR Kazakhstan</span>
         </div>
     </footer>
 
     <script>
-        // Конфигурация
-        const API_URL = '/api/payment/create.php'; // Измените на ваш URL
+        const PAYMENT_ENDPOINT = "/api/create-order.php";
+        const PUBLIC_TERMINAL_ID = "pk_74581f49e946383ca02b9efdd2d0e";
         const AMOUNT = 49200;
-        const agree = document.getElementById('agree');
-        const submitBtn = document.getElementById('submitBtn');
-        const paymentForm = document.getElementById('paymentForm');
-        const btnText = document.getElementById('btnText');
-        const paymentValue = document.querySelectorAll('.payment-value');
-        console.log(paymentValue);
-        // Установка суммы на кнопке
-        paymentValue.forEach(value => value.textContent = AMOUNT.toLocaleString('ru-RU'));
-        // Активация кнопки при согласии
-        agree.addEventListener('change', () => {
+
+        const agree = document.getElementById("agree");
+        const submitBtn = document.getElementById("submitBtn");
+        const paymentForm = document.getElementById("paymentForm");
+        const paymentValue = document.querySelectorAll(".payment-value");
+
+        const donationOpenBtn = document.getElementById("donationOpenBtn");
+        const donationModal = document.getElementById("donationModal");
+        const donationForm = document.getElementById("donationForm");
+        const donationAmount = document.getElementById("donationAmount");
+        const donationEmail = document.getElementById("donationEmail");
+        const donationAgree = document.getElementById("donationAgree");
+        const donationSubmitBtn = document.getElementById("donationSubmitBtn");
+        const donationCloseControls = document.querySelectorAll("[data-donation-close]");
+
+        paymentValue.forEach(value => value.textContent = AMOUNT.toLocaleString("ru-RU"));
+
+        agree.addEventListener("change", () => {
             submitBtn.disabled = !agree.checked;
         });
 
-        // Обработка отправки формы
-        paymentForm.addEventListener('submit', async (e) => {
+        async function startPayment({ email, amount, description }) {
+            const res = await fetch(PAYMENT_ENDPOINT, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, amount })
+            });
+
+            if (!res.ok) {
+                throw new Error("Не удалось создать заказ");
+            }
+
+            const order = await res.json();
+            const widget = new tiptop.Widget();
+
+            return widget.start({
+                publicTerminalId: PUBLIC_TERMINAL_ID,
+                amount,
+                currency: "KZT",
+                description,
+                invoiceId: order.invoiceId,
+                accountId: email,
+                email,
+                paymentSchema: "Single"
+            });
+        }
+
+        paymentForm.addEventListener("submit", async (e) => {
             e.preventDefault();
 
             if (!agree.checked) {
-                alert('Пожалуйста, примите условия оферты');
+                alert("Пожалуйста, примите условия оферты");
                 return;
             }
 
-            const email = document.getElementById('email').value;
+            const email = document.getElementById("email").value.trim();
 
             try {
-                const res = await fetch('/api/create-order.php', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        email: email,
-                        amount: AMOUNT
-                    })
-                });
-                const order = await res.json();
-
-                const widget = new tiptop.Widget();
-
-                const result = await widget.start({
-                    publicTerminalId: 'pk_74581f49e946383ca02b9efdd2d0e',
+                submitBtn.disabled = true;
+                await startPayment({
+                    email,
                     amount: AMOUNT,
-                    currency: 'KZT',
-                    description: 'Интенсив EMDR Express',
-                    invoiceId: order.invoiceId,
-                    accountId: email,
-                    email: email,
-                    paymentSchema: 'Single'
+                    description: "Интенсив EMDR Express"
                 });
-
-                console.log(result);
-
             } catch (error) {
-                alert('Ошибка: ' + error.message);
-                
-                // Возвращаем кнопку в исходное состояние
-                btnText.style.display = 'inline';
+                alert("Ошибка: " + error.message);
+            } finally {
                 submitBtn.disabled = !agree.checked;
+            }
+        });
+
+        function openDonationModal() {
+            donationModal.hidden = false;
+            donationModal.classList.add("is-open");
+            donationModal.setAttribute("aria-hidden", "false");
+            donationAmount.focus();
+        }
+
+        function closeDonationModal() {
+            donationModal.classList.remove("is-open");
+            donationModal.setAttribute("aria-hidden", "true");
+            donationModal.hidden = true;
+        }
+
+        function updateDonationSubmitState() {
+            const amount = Number(donationAmount.value);
+            donationSubmitBtn.disabled = !donationAgree.checked || !donationEmail.value.trim() || !Number.isFinite(amount) || amount <= 0;
+        }
+
+        donationOpenBtn.addEventListener("click", openDonationModal);
+        donationCloseControls.forEach(control => control.addEventListener("click", closeDonationModal));
+        donationAmount.addEventListener("input", updateDonationSubmitState);
+        donationEmail.addEventListener("input", updateDonationSubmitState);
+        donationAgree.addEventListener("change", updateDonationSubmitState);
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && donationModal.classList.contains("is-open")) {
+                closeDonationModal();
+            }
+        });
+
+        donationForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            if (!donationForm.checkValidity()) {
+                donationForm.reportValidity();
+                return;
+            }
+
+            const amount = Number(donationAmount.value);
+            const email = donationEmail.value.trim();
+
+            try {
+                donationSubmitBtn.disabled = true;
+                await startPayment({
+                    email,
+                    amount,
+                    description: "Пожертвование EMDR Express"
+                });
+            } catch (error) {
+                alert("Ошибка: " + error.message);
+            } finally {
+                updateDonationSubmitState();
             }
         });
     </script>
